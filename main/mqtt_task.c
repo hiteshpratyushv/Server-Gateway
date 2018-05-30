@@ -152,7 +152,6 @@ void mqtt_subscribe()
  void mqtt_unsubscribe()
  {
  	xEventGroupClearBits(wifi_event_group,MQTT_CONNECTED_BIT);
- 	xEventGroupClearBits(wifi_event_group,SUB_START);
  	ESP_LOGI(MQTT_TAG, "MQTTUnsubscribe  ...");
 		ret = MQTTUnsubscribe(&client, "test/topic");
 		if (ret != SUCCESS) {
