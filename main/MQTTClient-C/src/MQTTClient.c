@@ -258,7 +258,10 @@ int cycle(MQTTClient* c, Timer* timer)
                 else
                     rc = sendPacket(c, len, timer);
                 if (rc == FAILURE)
+                {
+                	printf("Some Error\n");
                     goto exit; // there was a problem
+                }
             }
             break;
         }

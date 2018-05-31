@@ -229,39 +229,6 @@ void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
     }
 }
 */
-
-void hex_to_string(const char *tag, const void *buffer, uint16_t buff_len, char *hex_buffer) //char *hex_buffer[3*BYTES_PER_LINE+1])
-{
-    if ( buff_len == 0 ) return;
-    char temp_buffer[BYTES_PER_LINE+3];   //for not-byte-accessible memory
-    //char hex_buffer[3*BYTES_PER_LINE+1];
-    const char *ptr_line;
-    int bytes_cur_line;
-
-    //do {
-        if ( buff_len > BYTES_PER_LINE ) {
-            bytes_cur_line = BYTES_PER_LINE;
-        } else {
-            bytes_cur_line = buff_len;
-        }
-        if ( !esp_ptr_byte_accessible(buffer) ) {
-            //use memcpy to get around alignment issue
-            memcpy( temp_buffer, buffer, (bytes_cur_line+3)/4*4 );
-            ptr_line = temp_buffer;
-        } else {
-            ptr_line = buffer;
-        }
-
-        for( int i = 0; i < bytes_cur_line; i ++ ) {
-            sprintf( hex_buffer + 3*i, "%02x ", ptr_line[i] );
-        }
-        ESP_LOG_LEVEL( 5, tag, "%s", hex_buffer );
-        printf("MMM : buf - %s\n", hex_buffer);
-        buffer += bytes_cur_line;
-        buff_len -= bytes_cur_line;
-    //} while( buff_len );
-}
-
 void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
     uint8_t *adv_name = NULL;
     uint8_t adv_name_len = 0;
@@ -278,6 +245,8 @@ void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         uint32_t duration = 60;
         esp_ble_gap_start_scanning(duration);
         printf("MMM: Started scanning \n");
+        xTaskCreate(&mqtt_subscribe, "mqtt_subscribe", 10240, NULL, 5, NULL);
+        xTaskCreate(&mqtt_yield, "mqtt_yield", 10240, NULL, 5, NULL);
         break;
     }
     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
@@ -288,8 +257,6 @@ void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
         }
         ESP_LOGI(GATTS_TAG, "scan start success");
         printf("MMM: scan start success \n");
-        xTaskCreate(&mqtt_subscribe, "mqtt_subscribe", 10240, NULL, 5, NULL);
-        xTaskCreate(&mqtt_yield, "mqtt_yield", 10240, NULL, 5, NULL);
         break;
     case ESP_GAP_BLE_SCAN_RESULT_EVT: {
         esp_ble_gap_cb_param_t *scan_result = (esp_ble_gap_cb_param_t *)param;
@@ -394,7 +361,6 @@ exit:       break;
                 uint32_t duration = 60;
                esp_ble_gap_start_scanning(duration);
                 printf("\nMMM: Started scanning AGAIN \n\n");
-                xTaskCreate(&mqtt_unsubscribe, "mqtt_unsubscribe", 10240, NULL, 5, NULL);
                 sleep(5);
                 }
             break;

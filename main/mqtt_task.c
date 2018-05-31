@@ -119,7 +119,7 @@ void mqtt_publish(void *pvParameters)
 	ESP_LOGI(MQTT_TAG, "MQTTPublish  ...");
 	MQTTMessage message;
 
-	message.qos = QOS1;
+	message.qos = QOS0;
 	message.retained = false;
 	message.dup = false;
 	message.payload = (void*)param;
@@ -141,7 +141,7 @@ void mqtt_subscribe()
 {
    	xEventGroupWaitBits(wifi_event_group, MQTT_CONNECTED_BIT, false, true, portMAX_DELAY);
 	ESP_LOGI(MQTT_TAG, "MQTTSubscribe  ...");
-	ret = MQTTSubscribe(&client, "test/topic", QOS1, mqtt_message_handler);
+	ret = MQTTSubscribe(&client, "test/topic", QOS0, mqtt_message_handler);
 	if (ret != SUCCESS) {
 		ESP_LOGI(MQTT_TAG, "MQTTSubscribe: %d", ret);
 	}
@@ -151,13 +151,13 @@ void mqtt_subscribe()
 
  void mqtt_unsubscribe()
  {
- 	xEventGroupClearBits(wifi_event_group,MQTT_CONNECTED_BIT);
- 	ESP_LOGI(MQTT_TAG, "MQTTUnsubscribe  ...");
-		ret = MQTTUnsubscribe(&client, "test/topic");
-		if (ret != SUCCESS) {
-			ESP_LOGI(MQTT_TAG, "MQTTUnsubscribe: %d", ret);
-		}
-	xEventGroupSetBits(wifi_event_group,MQTT_CONNECTED_BIT);
+	xEventGroupWaitBits(wifi_event_group, SUB_START, false, true, portMAX_DELAY); 
+	xEventGroupClearBits(wifi_event_group,SUB_START);
+	ESP_LOGI(MQTT_TAG, "MQTTUnsubscribe  ...");
+	ret = MQTTUnsubscribe(&client, "test/topic");
+	if (ret != SUCCESS) {
+		ESP_LOGI(MQTT_TAG, "MQTTUnsubscribe: %d", ret);
+	}
 	vTaskDelete(NULL);
  }
 
